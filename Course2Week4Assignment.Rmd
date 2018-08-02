@@ -2,15 +2,15 @@
 title: "R Notebook"
 output: html_notebook
 ---
-#Plot the 30-day mortality rates for heart attack
+# Plot the 30-day mortality rates for heart attack
 Goal is to use only clear R without any additional packages
-##Read & check data
+## Read & check data
 ```{r}
 outcome <- read.csv("outcome-of-care-measures.csv", colClasses = "character")
 head(outcome)
 
 ```
-##Make a histogramm
+## Make a histogramm
 
 ```{r}
 outcome[, 11] <- as.numeric(outcome[, 11])
@@ -18,7 +18,7 @@ hist(outcome[, 11])
 ```
 
 # Finding the best hospital in a state
-##Function
+## Function
 ```{r}
 best <- function(state, outcome) {
 ## Read outcome data
@@ -50,14 +50,14 @@ best <- function(state, outcome) {
 }
 
 ```
-##Test function
+## Test function
 ```{r}
 best("TX", "heart attack")
 best("TX", "heart failure")
 best("MD", "heart attack")
 best("MD", "pneumonia")
 ```
-##Test incorrect input
+## Test incorrect input
 ```{r}
 best("BB", "heart attack")
 ```
@@ -66,8 +66,8 @@ best("NY", "hert attack")
 ```
 
 
-#Ranking hospitals by outcome in a state
-##Function
+# Ranking hospitals by outcome in a state
+## Function
 ```{r}
 rankhospital <- function(state, outcome, num = "best") {
 ## Read outcome data
@@ -98,12 +98,12 @@ rankhospital <- function(state, outcome, num = "best") {
   result[n,2]
 }
 ```
-##Test function
+## Test function
 ```{r}
 rankhospital("TX", "heart failure", 4)
 rankhospital("MD", "heart attack", "worst")
 ```
-##Test incorrect input
+## Test incorrect input
 
 ```{r}
 rankhospital("MN", "heart attack", 5000)
@@ -156,7 +156,7 @@ rankall <- function(outcome, num = "best") {
   result
 }
 ```
-##Test function
+## Test function
 ```{r}
  head(rankall("heart attack", 20), 10)
 ```
@@ -169,51 +169,51 @@ tail(rankall("pneumonia", "worst"), 3)
 ```{r}
  tail(rankall("heart failure"), 10)
 ```
-#Quiz questions
-##1
+# Quiz questions
+## Q1
 ```{r}
 best("SC", "heart attack")
 ```
 
-##2
+## Q2
 ```{r}
 best("NY", "pneumonia")
 ```
 
-##3
+## Q3
 ```{r}
 best("AK", "pneumonia")
 ```
-##4
+## Q4
 ```{r}
 rankhospital("NC", "heart attack", "worst")
 ```
 
-##5
+## Q5
 ```{r}
 rankhospital("WA", "heart attack", 7)
 ```
-##6
+## Q6
 ```{r}
 rankhospital("TX", "pneumonia", 10)
 ```
 
-##7
+## Q7
 ```{r}
 rankhospital("NY", "heart attack", 7)
 ```
 
-##8
+## Q8
 ```{r}
 r <- rankall("heart attack", 4)
 as.character(subset(r, state == "HI")$hospital)
 ```
-##9
+## Q9
 ```{r}
 r <- rankall("pneumonia", "worst")
 as.character(subset(r, state == "NJ")$hospital)
 ```
-##10
+## Q10
 ```{r}
 r <- rankall("heart failure", 10)
 as.character(subset(r, state == "NV")$hospital)
