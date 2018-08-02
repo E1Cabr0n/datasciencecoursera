@@ -1,0 +1,221 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+#Plot the 30-day mortality rates for heart attack
+Goal is to use only clear R without any additional packages
+##Read & check data
+```{r}
+outcome <- read.csv("outcome-of-care-measures.csv", colClasses = "character")
+head(outcome)
+
+```
+##Make a histogramm
+
+```{r}
+outcome[, 11] <- as.numeric(outcome[, 11])
+hist(outcome[, 11])
+```
+
+# Finding the best hospital in a state
+##Function
+```{r}
+best <- function(state, outcome) {
+## Read outcome data
+  data <- read.csv("outcome-of-care-measures.csv", colClasses = "character")
+
+## Check that state and outcome are valid
+  if(!state %in% data$State) stop("invalid state")
+  outcomes = c("heart attack","heart failure","pneumonia")
+  if(!outcome %in% outcomes) stop("invalid outcome")
+  data <- data[data$State == state,]
+  if(match(outcome,outcomes)==1) {
+    col_num <- 11
+  }
+  else if(match(outcome,outcomes)==2) {
+    col_num <- 17
+  }
+  else col_num <- 23
+  data[data[,col_num]=="Not Available",] <- NA
+  data <- data[!is.na(data[,col_num]),]
+  data[,col_num] <- as.numeric(data[,col_num])
+
+  result <- data[data[,col_num] == min(data[,col_num], na.rm=T),]
+  result <- result[order(result[,col_num]),]
+  
+
+## Return hospital name in that state with lowest 30-day death
+## rate
+  result[1,2]
+}
+
+```
+##Test function
+```{r}
+best("TX", "heart attack")
+best("TX", "heart failure")
+best("MD", "heart attack")
+best("MD", "pneumonia")
+```
+##Test incorrect input
+```{r}
+best("BB", "heart attack")
+```
+```{r}
+best("NY", "hert attack")
+```
+
+
+#Ranking hospitals by outcome in a state
+##Function
+```{r}
+rankhospital <- function(state, outcome, num = "best") {
+## Read outcome data
+  data <- read.csv("outcome-of-care-measures.csv", colClasses = "character")
+## Check that state and outcome are valid
+  if(!state %in% data$State) stop("invalid state")
+  outcomes = c("heart attack","heart failure","pneumonia")
+  if(!outcome %in% outcomes) stop("invalid outcome")  
+## Return hospital name in that state with the given rank
+## 30-day death rate
+  data <- data[data$State == state,]
+  if(is.numeric(num) && num%%1 == 0 && nrow(data) < num) return(NA)
+  if(match(outcome,outcomes)==1) {
+    col_num <- 11
+  }
+  else if(match(outcome,outcomes)==2) {
+    col_num <- 17
+  }
+  else col_num <- 23
+  data[data[,col_num]=="Not Available",] <- NA
+  data <- data[!is.na(data[,col_num]),]
+  data[,col_num] <- as.numeric(data[,col_num])
+  result <- data[order(data[,col_num], data[,2]),]
+  if(num == "best") n <- 1
+  else if (num == "worst") n <- nrow(result)
+  else if (is.numeric(num) && num%%1 == 0) n <- num
+  else stop("num should be integer, best or worst")
+  result[n,2]
+}
+```
+##Test function
+```{r}
+rankhospital("TX", "heart failure", 4)
+rankhospital("MD", "heart attack", "worst")
+```
+##Test incorrect input
+
+```{r}
+rankhospital("MN", "heart attack", 5000)
+rankhospital("MN", "heart attack", 31.2)
+```
+# Ranking hospitals in all states
+## Function
+```{r}
+rankall <- function(outcome, num = "best") {
+## Read outcome data
+  data <- read.csv("outcome-of-care-measures.csv", colClasses = "character")
+  outcomes = c("heart attack","heart failure","pneumonia")
+  if(!outcome %in% outcomes) stop("invalid outcome")
+  states <- unique(data$State)
+  states <- sort(states)
+  result <- data.frame(hospital = character(), state = character())
+  
+## Check that state and outcome are valid
+## For each state, find the hospital of the given rank
+## Return a data frame with the hospital names and the
+## (abbreviated) state name
+  for (cur.state in states) {
+    state.data <- data[data$State == cur.state,]
+    if(is.numeric(num) && num%%1 == 0 && nrow(state.data) < num) {
+      state.result <- data.frame(hospital = NA, state = cur.state)
+      result <- rbind(result, state.result)
+    }
+    else {
+      if(match(outcome,outcomes)==1) {
+        col_num <- 11
+      }
+      else if(match(outcome,outcomes)==2) {
+        col_num <- 17
+      }
+      else col_num <- 23
+    
+    state.data[state.data[,col_num]=="Not Available",] <- NA
+    state.data <- state.data[!is.na(state.data[,col_num]),]
+    state.data[,col_num] <- as.numeric(state.data[,col_num])
+    temp.result <- state.data[order(state.data[,col_num], state.data[,2]),]
+    if(num == "best") n <- 1
+    else if (num == "worst") n <- nrow(temp.result)
+    else if (is.numeric(num) && num%%1 == 0) n <- num
+    else stop("num should be integer, best or worst")
+    state.result <- data.frame(hospital = temp.result[n,2], state = cur.state)
+    result <- rbind(result, state.result)
+    }
+    
+  }
+  result
+}
+```
+##Test function
+```{r}
+ head(rankall("heart attack", 20), 10)
+```
+
+```{r}
+tail(rankall("pneumonia", "worst"), 3)
+
+```
+
+```{r}
+ tail(rankall("heart failure"), 10)
+```
+#Quiz questions
+##1
+```{r}
+best("SC", "heart attack")
+```
+
+##2
+```{r}
+best("NY", "pneumonia")
+```
+
+##3
+```{r}
+best("AK", "pneumonia")
+```
+##4
+```{r}
+rankhospital("NC", "heart attack", "worst")
+```
+
+##5
+```{r}
+rankhospital("WA", "heart attack", 7)
+```
+##6
+```{r}
+rankhospital("TX", "pneumonia", 10)
+```
+
+##7
+```{r}
+rankhospital("NY", "heart attack", 7)
+```
+
+##8
+```{r}
+r <- rankall("heart attack", 4)
+as.character(subset(r, state == "HI")$hospital)
+```
+##9
+```{r}
+r <- rankall("pneumonia", "worst")
+as.character(subset(r, state == "NJ")$hospital)
+```
+##10
+```{r}
+r <- rankall("heart failure", 10)
+as.character(subset(r, state == "NV")$hospital)
+```
+
